@@ -11,9 +11,11 @@ import subprocess
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # client.connect(("localhost", 12345))
-
-server_ip = simpledialog.askstring("Server IP", "Enter server IP:", parent=None)
-client.connect((server_ip, 12345))
+root = tk.Tk()
+root.withdraw()  
+server_ip = simpledialog.askstring("Server IP", "Enter the server IP:", parent=root)
+client.settimeout(10)
+client.connect((server_ip, 12345))  # Connect to the provided server IP
 
 method = client.recv(1024).decode().strip().lower()
 key = client.recv(1024)
