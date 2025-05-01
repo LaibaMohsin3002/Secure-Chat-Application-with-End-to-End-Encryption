@@ -18,15 +18,11 @@ def setq(num):
 def getq():
     return q
 
-
 def seta(num):
     a =num
 
-
 def geta():
     return a
-
-
 
 def power(x, y, p):
     res = 1  # Initialize result
@@ -45,7 +41,6 @@ def power(x, y, p):
         x = (x * x) % p
 
     return res
-
 
 # Utility function to store prime
 # factors of a number
@@ -69,15 +64,10 @@ def findPrimefactors(s, n):
     if (n > 2):
         s.add(n)
 
-
 # Function to find smallest primitive
 # root of n
 def findPrimitive(n):
     s = set()
-
-
-
-
     # Find value of Euler Totient function
     # of n. Since n is a prime number, the
     # value of Euler Totient function is n-1
@@ -108,11 +98,6 @@ def findPrimitive(n):
 
     # If no primitive root found
     return -1
-
-
-
-
-
 
 #import randint as rand
 #########key generation by alice##########
@@ -152,16 +137,12 @@ def generate_public_key():
     seta(a)
     print(a)
 
-
     XA = random.randrange(0, q - 1)
     print("private key XA is generated=", XA)
-
 
     # YA=a^XA mod q
     temp = a ** XA
     YA = temp % q
-
-
 
     publickey = [q, a, YA, XA]
     print("public key YA is generated=",YA)
@@ -216,9 +197,6 @@ def incrypt_gamal(q,a,YA,text):#{q, a, YA, XA}
     # C2 = temp %q
     print("generated Cipher 2 = ", C2)
 
-
-
-
     returnedvalue = ""
     returnedvalue+= str(C1) + ","
 
@@ -230,18 +208,8 @@ def incrypt_gamal(q,a,YA,text):#{q, a, YA, XA}
     print("returned value = ",returnedvalue)
     return returnedvalue
 
-
-
-
-
 #{m,k,K,C1,C2} done
 #cipher text = (C1,C2)
-
-
-
-
-
-
 
 #########decryption by alice by alice's private key###############
 #ciper text = (C1.C2)
@@ -261,24 +229,12 @@ def decrept_gamal(messagecopy,XA):
     for i in range(len(tempmessage)):
         if i!=0 and i!=len(tempmessage)-1:
             C2.append(int(tempmessage[i]))
-
-
-
-
-
-
     print("tempmessage after spliting",tempmessage)
 
     #C2 = [int(i) for i in C2]
-
-
     #q=getq()
     #XA=getXA()
-
     #q = int(tempmessage[2])
-
-
-
 
     #print("full message=", messagecopy)
     print("Received Cipher 1 = ", C1)

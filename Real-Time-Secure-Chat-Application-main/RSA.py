@@ -116,7 +116,6 @@ def hexadecimalToDecimal(hexval):
 
     return dec_val
 
-
 def preprocess_message(message,n):
     mes=[]
     m=message
@@ -142,16 +141,7 @@ def preprocess_message(message,n):
     print(stri)
     m=stri
 
-
 ###########################################################################################################################
-
-
-
-
-
-
-
-
 
 #  x= P=[] + "," +Q=[]+","+phy_n+","+n+","+E+","+D
 
@@ -231,16 +221,6 @@ def calc():
     Q=[4783,3709,7547,6869,3001]
     r=randint(0,4)
 
-
-
-
-
-
-
-
-
-
-
     n=P[r]*Q[r]
     num=n
     phy_n=(P[r]-1)*(Q[r]-1)
@@ -250,41 +230,19 @@ def calc():
                 return n
             return GCD(n%m,m)
 
-
-            
-            
-
     for e in range(2,phy_n):
             if(GCD(e,phy_n)==1):         
                 E = e
                 break
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     def calc_d(E,phy_n):
-
-
         a,bhy,u= 0,phy_n,1
         e=E
         while (e>0):
             R=bhy//e
             e,a,bhy,u= bhy%e,u,e,a-R*u
         if(bhy==1):
-            return a%phy_n
-
-
-                    
+            return a%phy_n               
 
         # for d in range(2,phy_n):
         #     res=(E*d)%phy_n
@@ -293,7 +251,6 @@ def calc():
         #         break
         # return D
     D = calc_d(E,phy_n)
-
 
     return n,E,D
 message="HEY"
@@ -327,7 +284,6 @@ def to_plain(D,n,Cipher,mes):
     #     plain.append(m)
     #     l+=1
     # return plain
-
     
     print("from RSA:",Cipher)
 
@@ -351,14 +307,7 @@ def to_plain(D,n,Cipher,mes):
                 if(inbin[i]==0):
                     res=(res**2)%n
         
-
-
         plain.append(res)    
-
-
-
-
-
 
     print("plain back: ",plain)
     s = [str(i) for i in plain]
@@ -384,11 +333,7 @@ def to_plain(D,n,Cipher,mes):
 
         k+=count
 
-
-
-
     print("textt: ",textt)
-
 
     string_ints = [chr(int) for int in textt]
     str_of_ints = "".join(string_ints)
