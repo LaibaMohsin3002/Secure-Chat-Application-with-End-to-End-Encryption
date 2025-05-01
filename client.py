@@ -1,21 +1,60 @@
-
 import socket
 import threading
 import tkinter as tk
 from tkinter import scrolledtext, filedialog, simpledialog
 from cryptography.fernet import Fernet
+from Crypto.Cipher import AES
 import os
-import subprocess
+import base64
 import platform
+import subprocess
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(("localhost", 12345))
+# client.connect(("localhost", 12345))
 
-# Get encryption key
-encryption_key = client.recv(1024)
-cipher_suite = Fernet(encryption_key)
+server_ip = simpledialog.askstring("Server IP", "Enter server IP:", parent=None)
+client.connect((server_ip, 12345))
 
-# GUI Setup
+method = client.recv(1024).decode().strip().lower()
+key = client.recv(1024)
+
+if method == "fernet":
+    cipher_suite = Fernet(key)
+    print(f"[FERNET] Key: {key.decode()}")
+else:
+    encryption_key = base64.b64decode(key)
+    print(f"[AES] Key: {base64.b64encode(encryption_key).decode()}")
+
+    def aes_encrypt(data):
+        iv = os.urandom(16)
+        cipher = AES.new(encryption_key, AES.MODE_CFB, iv=iv)
+        encrypted = cipher.encrypt(data)
+        result = base64.b64encode(iv + encrypted)
+        print(f"[AES ENCRYPT] Raw: {data}, Encrypted: {result}")
+        return result
+
+    def aes_decrypt(data):
+        raw = base64.b64decode(data)
+        iv_in = raw[:16]
+        cipher = AES.new(encryption_key, AES.MODE_CFB, iv=iv_in)
+        decrypted = cipher.decrypt(raw[16:])
+        print(f"[AES DECRYPT] Raw: {data}, Decrypted: {decrypted}")
+        return decrypted
+
+def encrypt(data):
+    if method == "fernet":
+        encrypted = cipher_suite.encrypt(data)
+        print(f"[FERNET ENCRYPT] {data} → {encrypted}")
+        return encrypted
+    return aes_encrypt(data)
+
+def decrypt(data):
+    if method == "fernet":
+        decrypted = cipher_suite.decrypt(data)
+        print(f"[FERNET DECRYPT] {data} → {decrypted}")
+        return decrypted
+    return aes_decrypt(data)
+
 root = tk.Tk()
 root.title("Secure Chat")
 text_area = scrolledtext.ScrolledText(root)
@@ -24,15 +63,12 @@ text_area.config(state='disabled')
 
 entry_field = tk.Entry(root)
 entry_field.pack(padx=10, pady=(0,5), fill='x')
-
-# Send button
 send_button = tk.Button(root, text="Send Message", command=lambda: send_message())
 send_button.pack(pady=(0, 10))
 
 username = simpledialog.askstring("Username", "Enter your name:", parent=root)
-client.send(cipher_suite.encrypt(username.encode()))
+client.send(encrypt(username.encode()))
 
-# Send text messages
 def send_message():
     message = entry_field.get()
     if not message:
@@ -42,14 +78,12 @@ def send_message():
     text_area.insert(tk.END, f"You: {message}\n")
     text_area.config(state='disabled')
     text_area.yview(tk.END)
-
-    encrypted = cipher_suite.encrypt(message.encode())
-    print(f"[ENCRYPTED] {encrypted}")
+    encrypted = encrypt(message.encode())
+    print(f"[SEND] Sending: {message} → {encrypted}")
     client.send(encrypted)
 
 entry_field.bind("<Return>", lambda e: send_message())
 
-# Send files
 def send_file():
     filepath = filedialog.askopenfilename()
     if not filepath:
@@ -57,10 +91,11 @@ def send_file():
     filename = os.path.basename(filepath)
     with open(filepath, "rb") as f:
         data = f.read()
-    encrypted_data = cipher_suite.encrypt(data)
+    encrypted_data = encrypt(data)
     header = f"FILE:{filename}:{len(encrypted_data)}"
-    client.send(cipher_suite.encrypt(header.encode()))
+    client.send(encrypt(header.encode()))
     client.send(encrypted_data)
+    print(f"[SEND FILE] Sent {filename} ({len(encrypted_data)} bytes)")
     text_area.config(state='normal')
     text_area.insert(tk.END, f"You sent file: {filename}\n")
     text_area.config(state='disabled')
@@ -69,7 +104,6 @@ def send_file():
 file_button = tk.Button(root, text="Send File", command=send_file)
 file_button.pack(pady=(0,10))
 
-# Platform-independent file opener
 def open_file_callback(file_path):
     if platform.system() == 'Darwin':
         subprocess.call(('open', file_path))
@@ -78,19 +112,26 @@ def open_file_callback(file_path):
     else:
         subprocess.call(('xdg-open', file_path))
 
-# Add clickable file button
 def add_file_button(display_name, path):
     btn = tk.Button(root, text=f"Open {display_name}", command=lambda: open_file_callback(path))
     btn.pack()
 
-# Receive messages/files
+def quit_chat():
+    client.send(encrypt("QUIT".encode()))
+    root.destroy()
+    client.close()
+
+quit_button = tk.Button(root, text="Quit", command=quit_chat)
+quit_button.pack(pady=(0,10))
+
 def receive():
     while True:
         try:
             header = client.recv(1024)
             if not header:
                 break
-            decrypted_header = cipher_suite.decrypt(header).decode()
+            decrypted_header = decrypt(header).decode()
+            print(f"[RECEIVED] Header Decrypted: {decrypted_header}")
             if decrypted_header.startswith("FILE:"):
                 _, filename, filesize = decrypted_header.split(":")
                 filesize = int(filesize)
@@ -98,10 +139,11 @@ def receive():
                 while len(encrypted_data) < filesize:
                     chunk = client.recv(min(4096, filesize - len(encrypted_data)))
                     encrypted_data += chunk
-                data = cipher_suite.decrypt(encrypted_data)
+                data = decrypt(encrypted_data)
                 file_path = f"received_{filename}"
                 with open(file_path, "wb") as f:
                     f.write(data)
+                print(f"[RECEIVED FILE] Saved as {file_path}")
                 text_area.config(state='normal')
                 text_area.insert(tk.END, f"File received: {filename}\n")
                 text_area.config(state='disabled')
@@ -109,7 +151,6 @@ def receive():
                 add_file_button(filename, file_path)
             else:
                 decrypted = decrypted_header
-                print(f"[DECRYPTED] {decrypted}")
                 text_area.config(state='normal')
                 text_area.insert(tk.END, decrypted + "\n")
                 text_area.config(state='disabled')
@@ -119,5 +160,4 @@ def receive():
             break
 
 threading.Thread(target=receive, daemon=True).start()
-
 root.mainloop()
