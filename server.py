@@ -1,16 +1,18 @@
-import socket
-import threading
+import socket #[1] Using sockets for TCP communication
+import threading # [5] Multiplexing: Threads to handle multiple clients
 import os
 from cryptography.fernet import Fernet
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 import base64
 
-# Ask the admin which encryption method to use
+
+# [4] Admin selects encryption method - security at application layer (simulating app-layer service model)
 method = input("Select encryption method (fernet/aes): ").strip().lower()
 assert method in ["fernet", "aes"], "Invalid encryption method selected."
 
-# Setup encryption
+
+# [4] Setting up encryption - part of application layer
 if method == "fernet":
     encryption_key = Fernet.generate_key()
     cipher_suite = Fernet(encryption_key)
@@ -28,10 +30,12 @@ else:
         cipher = AES.new(encryption_key, AES.MODE_CFB, iv=iv_in)
         return cipher.decrypt(raw[16:])
 
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# [1] [3] [6] Creating TCP socket; congestion control and reliable transfer handled by TCP
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
 # server.bind(("localhost", 12345))
-server.bind(("0.0.0.0", 12345))
-server.listen()
+server.bind(("0.0.0.0", 12345))  # [1]
+server.listen()  # [3] TCP connection wait (with implicit congestion control) [6]
 
 clients = {}
 usernames = {}
@@ -52,6 +56,7 @@ def broadcast(message, sender_socket):
                 client.close()
                 del clients[client]
 
+# [5] Threaded handler for client connection (multiplexing)
 def handle_client(client_socket):
     try:
         username_encrypted = client_socket.recv(1024)
@@ -67,7 +72,7 @@ def handle_client(client_socket):
             header = client_socket.recv(1024)
             if not header:
                 break
-
+            # Demultiplexing based on message type (text vs file)
             header_decoded = decrypt(header).decode()
             if header_decoded.startswith("FILE:"):
                 _, filename, filesize = header_decoded.split(":")
@@ -104,9 +109,9 @@ def handle_client(client_socket):
 print("[SERVER STARTED] Waiting for connections...")
 
 while True:
-    client_socket, addr = server.accept()
+    client_socket, addr = server.accept() # [3] Accepting TCP connection
     print(f"[NEW CONNECTION] {addr}")
     client_socket.send(method.encode())
     client_socket.send(encryption_key if method == "fernet" else base64.b64encode(encryption_key))
-    threading.Thread(target=handle_client, args=(client_socket,), daemon=True).start()
+    threading.Thread(target=handle_client, args=(client_socket,), daemon=True).start()  #[5] Multiplexing: Threads to handle multiple clients
 
