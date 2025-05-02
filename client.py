@@ -14,7 +14,7 @@ client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 root = tk.Tk()
 root.withdraw()  
 server_ip = simpledialog.askstring("Server IP", "Enter the server IP:", parent=root)
-client.settimeout(10)
+client.settimeout(None)
 client.connect((server_ip, 12345))  # Connect to the provided server IP
 
 method = client.recv(1024).decode().strip().lower()
