@@ -232,7 +232,7 @@ def decrypt(data):
 root = tk.Tk()
 root.title("Secure Chat")
 root.configure(bg="black")
-root.geometry("400x600")  # Smaller window
+root.geometry("400x600")  
 
 text_area = scrolledtext.ScrolledText(root, bg="#2e2e2e", fg="white", insertbackground='white')
 text_area.pack(padx=10, pady=10, fill='both', expand=True)
@@ -241,7 +241,7 @@ text_area.config(state='disabled')
 entry_field = tk.Entry(root, bg="#1e1e1e", fg="white", insertbackground='white')
 entry_field.pack(padx=10, pady=(0, 5), fill='x')
 
-send_button = tk.Button(root, text="Send Message", width=30, bg="#ff69b4", fg="black", command=lambda: send_message())
+send_button = tk.Button(root, text="Send Message", width=30, bg="#FFD1DC", fg="black", command=lambda: send_message())
 send_button.pack(pady=(0, 10))
 
 username = simpledialog.askstring("Username", "Enter your name:", parent=root)
@@ -279,7 +279,7 @@ def send_file():
     text_area.config(state='disabled')
     text_area.yview(tk.END)
 
-file_button = tk.Button(root, text="Send File", width=30, bg="#ff69b4", fg="black", command=send_file)
+file_button = tk.Button(root, text="Send File", width=30, bg="#FFD1DC", fg="black", command=send_file)
 file_button.pack(pady=(0, 10))
 
 def open_file_callback(file_path):
@@ -291,7 +291,7 @@ def open_file_callback(file_path):
         subprocess.call(('xdg-open', file_path))
 
 def add_file_button(display_name, path):
-    btn = tk.Button(root, text=f"Open {display_name}", width=30, bg="#ff69b4", fg="black",
+    btn = tk.Button(root, text=f"Open {display_name}", width=30, bg="#FFD1DC", fg="black",
                     command=lambda: open_file_callback(path))
     btn.pack()
 
@@ -300,7 +300,7 @@ def quit_chat():
     root.destroy()
     client.close()
 
-quit_button = tk.Button(root, text="Quit", width=30, bg="#ff69b4", fg="black", command=quit_chat)
+quit_button = tk.Button(root, text="Quit", width=30, bg="#FFD1DC", fg="black", command=quit_chat)
 quit_button.pack(pady=(0, 10))
 
 def receive():
